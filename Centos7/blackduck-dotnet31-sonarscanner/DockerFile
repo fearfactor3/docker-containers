@@ -1,0 +1,30 @@
+# pull base image from centos7
+FROM centos:7
+
+USER root
+
+# update kernel 
+RUN yum update -y
+
+# set up microsoft repo in linux first 
+RUN rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm
+
+# install dotnet-sdk-3.1.x86_64 : .NET Core 3.1 Software Development Kit
+RUN yum install -y dotnet-sdk-3.1.x86_64
+
+# install jdk & wget for sonarscanner for blackduck
+RUN yum install -y java-1.8.0-openjdk.x86_64 wget
+
+# install sonarscanner
+# https://andrewlock.net/running-net-core-global-tools-in-non-sdk-docker-images/
+# https://stackoverflow.com/questions/62217816/how-to-use-dotnet-tools-inside-a-container
+RUN dotnet tool install --global dotnet-sonarscanner --version 5.2.1
+
+# Add .NET Core SDK tools path for msbuild dll
+ENV PATH="${PATH}:/root/.dotnet/tools:/usr/local/share/blackduckscan/"
+
+# install blackduck
+RUN mkdir /usr/local/share/blackduckscan
+RUN wget https://detect.synopsys.com/detect.sh
+RUN mv detect.sh /usr/local/share/blackduckscan/detect.sh
+RUN chmod +x /usr/local/share/blackduckscan/detect.sh
